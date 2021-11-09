@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html style="font-family: ABeeZee, sans-serif;">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <title>WeedGuys</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/4.6.0/superhero/bootstrap.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&amp;display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=ABeeZee&amp;display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Pacifico&amp;display=swap">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.12.0/css/all.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="assets/fonts/fontawesome5-overrides.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.5.2/animate.min.css">
+    <link rel="stylesheet" href="assets/css/styles.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.4/axios.min.js" integrity="sha512-lTLt+W7MrmDfKam+r3D2LURu0F47a3QaW5nF0c6Hl0JDZ57ruei+ovbg7BrZ+0bjVJ5YgzsAWE+RreERbpPE1g==" crossorigin="anonymous" referrerpolicy="no-referrer">
+</script>
+</head>
+
+<body id="appBody" style="font-family: ABeeZee, sans-serif;">
+    <div id="shopping-cart" class="p-3" v-if="shopping_cart_is_hidden == false" style="background: #2b3e50;">
+        <div class="container">
+            <div class="row">
+                <div class="col-12"><button class="btn btn-lg shopping-cart-close" type="button" v-on:click="toggle_shopping_cart"><span class="pb-1 pr-2 pl-2" style="font-size: 34px;">x</span></button>
+                    <h4 class="text-white shopping-cart-title">Shopping Cart Items ({{shopping_cart.length}})</h4>
+                </div>
+                <div class="col-12">
+                    <hr style="border-color: rgb(255,255,255);">
+                </div>
+                <div class="col-12">
+                    <div class="table-responsive table-bordered bg-white" v-if="shopping_cart.length > 0">
+                        <table class="table table-striped table-bordered table-sm mb-0">
+                            <thead class="text-dark-black">
+                                <tr>
+                                    <th class="position-sticky left-stuck bg-white" style="width: 40px;">Delete</th>
+                                    <th class="position-sticky right-stuck bg-white" style="width: 200px;">Quantity</th>
+                                    <th>Price</th>
+                                    <th>Name</th>
+                                    <th>Type</th>
+                                    <th>Strain</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="(item, index) in shopping_cart">
+                                    <td class="bg-danger align-middle position-sticky left-stuck"><button class="btn btn-danger btn-block btn-sm" type="button" v-on:click="delete_cart_item(index)"><i class="fa fa-trash"></i></button></td>
+                                    <td class="bg-secondary align-middle position-sticky right-stuck"><select class="bg-secondary border-0 text-white h-100 form-control" v-model="shopping_cart[index].customer_selected_quantity" style="width: 78px;">
+                                            <option value="0" selected="">Edit</option>
+                                            <option value="3.5">3.5</option>
+                                            <option value="4.0">4.0</option>
+                                            <option value="5.0">5.0</option>
+                                            <option value="6.0">6.0</option>
+                                            <option value="7.0">7.0</option>
+                                            <option value="8.0">8.0</option>
+                                            <option value="9.0">9.0</option>
+                                            <option value="10.0">10.0</option>
+                                            <option value="11.0">11.0</option>
+                                            <option value="12.0">12.0</option>
+                                        </select></td>
+                                    <td class="text-center align-middle"><a class="btn btn-success" role="button">${{item.customer_selected_quantity*item.customer_gram_price}}</a><span class="badge badge-success p-2"></span></td>
+                                    <td class="align-middle text-dark-black" style="width: auto;">{{item.name}}</td>
+                                    <td class="align-middle text-dark-black">{{item.type}}</td>
+                                    <td class="align-middle text-dark-black">{{item.strain_type}}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <hr style="border-color: rgb(255,255,255);">
+                </div>
+                <div class="col-sm-12 col-md-4 offset-md-8 pr-3 pb-3 pl-3 pt-0">
+                    <div class="card shadow-lg">
+                        <div class="card-body bg-white pb-3 text-dark-black">
+                            <div class="row">
+                                <div class="col-12">
+                                    <h3 class="mb-0" v-if="current_checkout_node == 'Confirm Order'">Confirm Order</h3>
+                                    <h3 class="mb-0" v-if="current_checkout_node == 'Delivery Address'">Delivery Address</h3>
+                                    <h3 class="mb-0" v-if="current_checkout_node == 'Age Verification'">Age Verification</h3>
+                                    <h3 class="mb-0" v-if="current_checkout_node == 'Complete Order'">Order Submitted</h3>
+                                </div>
+                                <div class="col-12">
+                                    <hr>
+                                </div>
+                                <div class="col-12">
+                                    <ul class="mb-0" v-if="current_checkout_node == 'Confirm Order'">
+                                        <li v-for="(item, index) in shopping_cart">{{item.name}} | {{item.customer_selected_quantity}}g x ${{item.customer_gram_price}}/g</li>
+                                    </ul>
+                                    <form v-if="current_checkout_node == 'Delivery Address'">
+                                        <div class="form-row">
+                                            <div class="col-6"><label>Street Address</label><input class="form-control" type="text"></div>
+                                            <div class="col-6"><label>Apt / Unit</label><input class="form-control" type="text"></div>
+                                            <div class="col-4"><label>City</label><input class="form-control" type="text"></div>
+                                            <div class="col-4"><label>State</label><input class="form-control" type="text"></div>
+                                            <div class="col-4"><label>Zip</label><input class="form-control" type="text"></div>
+                                            <div class="col-12"><label>Delivery Method</label><select class="form-control">
+                                                    <option value="0">- Select One -</option>
+                                                    <option value="Discreet - Curbside" selected="">Discreet (Curbside)</option>
+                                                    <option value="Deliver to Door">Deliver to Door</option>
+                                                </select></div>
+                                            <div class="col-12"><label>Special Instructions</label><input class="form-control" type="text" placeholder="Gate Code, Barking Dog, Etc"></div>
+                                        </div>
+                                    </form>
+                                    <form v-if="current_checkout_node == 'Age Verification'">
+                                        <div class="form-row">
+                                            <div class="col-6"><label>First Name</label><input class="form-control" type="text"></div>
+                                            <div class="col-6"><label>Last Name</label><input class="form-control" type="text"></div>
+                                            <div class="col-6"><label>Email</label><input class="form-control" type="text"></div>
+                                            <div class="col-6"><label>Phone</label><input class="form-control" type="text"></div>
+                                            <div class="col-12">
+                                                <div class="form-row">
+                                                    <div class="col-12 text-center"><label class="col-form-label mt-3 mb-3">ID Verification</label></div>
+                                                    <div class="col-12">
+                                                        <div class="alert alert-danger mb-3" role="alert">
+                                                            <div class="form-row">
+                                                                <div class="col-12"><span><i class="fas fa-exclamation-circle mr-2"></i>Please take a photo of yourself while holding your Driver's License or State ID</span></div>
+                                                                <div class="col-12 pt-2">
+                                                                    <div class="form-row">
+                                                                        <div class="col-12">
+                                                                            <div><a class="btn btn-block" role="button" data-toggle="modal" href="#myModal"><strong>View Example</strong></a>
+                                                                                <div class="modal fade" role="dialog" tabindex="-1" id="myModal">
+                                                                                    <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+                                                                                        <div class="modal-content">
+                                                                                            <div class="modal-header">
+                                                                                                <h4>ID Example</h4><button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+                                                                                            </div>
+                                                                                            <div class="modal-body text-center p-0"><img class="img-fluid border-dark bg-white" src="assets/img/Exmple_ID.png"></div>
+                                                                                            <div class="modal-footer"><button class="btn btn-danger" data-dismiss="modal" type="button">Close Example</button></div>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-3"><label class="col-form-label">Front:</label></div>
+                                                    <div class="col-9 mb-2 border border-dashed"><input class="bg-warning form-control-file text-white p-2 mb-1 mt-1" type="file"></div>
+                                                    <div class="col-3"><label class="col-form-label">Back:</label></div>
+                                                    <div class="col-9 border border-dashed"><input class="bg-warning form-control-file text-white p-2 mb-1 mt-1" type="file"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </form>
+                                    <form v-if="current_checkout_node == 'Complete Order'">
+                                        <div class="form-row">
+                                            <div class="col">
+                                                <div class="alert alert-success text-center mb-0" role="alert"><i class="far fa-thumbs-up d-block fa-3x mb-2"></i><span>Your order has been submitted. You will be contacted shortly.</span></div>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                                <div class="col-12">
+                                    <hr>
+                                </div>
+                                <div class="col-12">
+                                    <div class="shopping-cart-total bg-success mb-3" v-if="current_checkout_node != 'Complete Order'">
+                                        <h5 class="text-center text-white mb-0" v-if="current_checkout_node != 'Complete Order'"><strong>Total</strong>:&nbsp;<span class="text-white"><strong>${{shopping_cart_total}}</strong></span></h5>
+                                    </div>
+                                </div>
+                                <div class="col-4"><button class="btn btn-danger btn-block" type="button" v-on:click="traverse_checkout_nodes('last')" v-if="back_button_is_hidden == false"><span>Back</span></button></div>
+                                <div class="col-8"><button class="btn btn-success btn-block" type="button" v-on:click="traverse_checkout_nodes('next')" v-if="current_checkout_node != 'Complete Order'"><span v-if="current_checkout_node == 'Confirm Order'">Next: Delivery Address</span><span v-if="current_checkout_node == 'Delivery Address'">Next: Upload ID</span><span v-if="current_checkout_node == 'Age Verification'">Submit Order</span></button></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div><button class="btn btn-dark rounded-0" id="toggle-test-data" type="button" v-on:click="toggle_test_data"><i class="fa fa-code"></i></button>
+    <div id="main-content-wrapper" class="vh-100 vw-100 pl-0 m-0 pr-0 pb-0">
+        <nav class="navbar navbar-light navbar-expand-md fixed-top border-bottom" style="height: 78px;background: linear-gradient(136deg, #008542 0%, #ffe000 49%, #e70001 100%);">
+            <div class="container-fluid">
+                <ul class="navbar-nav">
+                    <li class="nav-item leaf-logo"><img class="img-fluid" src="assets/img/Weed_Leaf.png" width="70" style="transform: rotate(-14deg);"></li>
+                    <li class="nav-item"><a class="navbar-brand text-white brand-site-name" href="#" style="font-family: Pacifico, serif;font-size: 30px;">{{site_name}}</a></li>
+                </ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <div class="btn-group" role="group"><button class="btn btn-success" type="button"><i class="far fa-list-alt"></i>&nbsp;Order</button><a class="btn btn-primary" role="button" href="tel: 18000000000"><i class="fas fa-phone"></i>&nbsp;Phone</a></div>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+        <div class="container">
+            <div class="row">
+                <div class="col-sm-6 col-md-4 col-lg-3 col-xl-3 mb-3" v-for="(item, index) in menu">
+                    <div class="card">
+                        <div class="card-body pt-3 bg-white">
+                            <div class="row no-gutters">
+                                <div class="col-md-12">
+                                    <h4 class="text-dark mb-3">{{item.name}}</h4>
+                                </div>
+                                <div class="col-12 mb-2"><img class="img-fluid border rounded-0 border-light product-image" v-bind:src="item.image_url + item.image_name"></div>
+                                <div class="col-12">
+                                    <h6 class="pt-1"><span class="badge badge-primary mr-2">{{item.strain_type}}<br></span><span class="badge badge-info mr-2">{{item.thc_content}}% TCH<br></span><span class="badge badge-success mr-2">${{parseInt(item.customer_gram_price)}}/g<br></span></h6>
+                                </div>
+                                <div class="col">
+                                    <form>
+                                        <div class="form-row">
+                                            <div class="col-12 pt-2">
+                                                <div class="alert alert-danger text-center text-white p-2" role="alert"><span>${{item.min_amount}} Minimum</span></div>
+                                            </div>
+                                            <div class="col-12 mb-2"><select class="form-control" v-model="item.customer_selected_quantity" v-on:change="reveal_add_to_cart(index)">
+                                                    <option value="0" selected="">- Select Quantity -</option>
+                                                    <option value="3.5">3.5</option>
+                                                    <option value="4.0">4.0</option>
+                                                    <option value="5.0">5.0</option>
+                                                    <option value="6.0">6.0</option>
+                                                    <option value="7.0">7.0</option>
+                                                    <option value="8.0">8.0</option>
+                                                    <option value="9.0">9.0</option>
+                                                    <option value="10.0">10.0</option>
+                                                    <option value="11.0">11.0</option>
+                                                    <option value="12.0">12.0</option>
+                                                </select></div>
+                                            <div class="col-12 text-center" v-if="item.cart_add_hidden == false">
+                                                <p class="text-white mt-2 bg-success p-2"><strong>Total: ${{parseInt(item.customer_gram_price) * parseInt(item.customer_selected_quantity).toFixed(2)}}</strong><br></p>
+                                            </div>
+                                            <div class="col-7 offset-5" v-if="item.cart_add_hidden == false"><button class="btn btn-primary btn-block" type="button" v-on:click="add_item_to_cart(index)">Add To&nbsp;<i class="fa fa-shopping-cart"></i></button></div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div><button class="btn btn-warning shake animated cart-button" type="button" v-on:click="toggle_shopping_cart" v-if="shopping_cart.length > 0">View Cart<i class="fas fa-shopping-cart ml-1"></i><span class="badge badge-danger border rounded-circle cart-item-count-badge">{{shopping_cart.length}}</span></button>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.0/js/bootstrap.bundle.min.js"></script>
+    <script src="assets/js/bs-init.js"></script>
+    <script src="https://unpkg.com/vue@next"></script>
+    <script src="assets/js/mainVue.js"></script>
+</body>
+
+</html>
